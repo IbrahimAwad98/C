@@ -1,0 +1,15 @@
+Amritpal     
+            Monopoly        5 
+            Risk            7 
+            Tic-tac-toe     6 
+Lubna 
+            Pictonary       4 
+            Acquire         7 
+            Monopoly        8 
+Mira 
+            Scrabble        10 
+            Catan           3 
+Peter 
+Ralf 
+            Chess           8 
+            Checkers        9
