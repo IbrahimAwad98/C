@@ -38,15 +38,12 @@ int main(void)
     char fileName[NAMELENGTH + 1];
     printf("Welcome to boardgame ratings.\n");
     printf("Which file do you want to use: ");
-    if (fgets(fileName, sizeof(fileName), stdin) != NULL)
-    {
-        strtok(fileName, "\n");
-    }
-    else
+    if (fgets(fileName, sizeof(fileName), stdin) == NULL)
     {
         printf("Error reading file name.\n");
         return 1;
     }
+    fileName[strcspn(fileName, "\n")] = 0;
     readFromFile(users, &nrOfUsers, fileName);
     loginsAlternativs(users, &nrOfUsers, fileName);
     return 0;
@@ -59,21 +56,20 @@ void readFromFile(User users[MAXUSERS], int *pNrOfUsers, const char *pFileName)
         printf("Error opening file: %s\n", pFileName);
         return;
     }
-    (*pNrOfUsers = 0);
     char Buffer[BUFFERSIZE];
-    while (*pNrOfUsers < MAXUSERS && fgets(Buffer, sizeof(Buffer), pFile))
+    *pNrOfUsers = 0;
+    while (fgets(Buffer, sizeof(Buffer), pFile))
     {
-        Buffer[strcspn(Buffer, "\r\n")] = '\0';
-        if (Buffer[0] != ' ' && Buffer[0] != '\t')
+        char *pToken = strtok(Buffer, "\n");
+        strcpy(users[*pNrOfUsers].userName, pToken);
+        users[*pNrOfUsers].nrOfGames = 0;
+        pToken = strtok(NULL, "\n");
+        while (pToken)
         {
-            strcpy(users[*pNrOfUsers].userName, Buffer);
-            users[*pNrOfUsers].nrOfGames = 0;
+            users[*pNrOfUsers].list[users[*pNrOfUsers].nrOfGames].rate = atoi(pToken);
+            users[*pNrOfUsers].nrOfGames++;
+            pToken = strtok(NULL, "\n");
         }
-        else
-        {
-            
-        }
-        (*pNrOfUsers)++;
     }
     if (*pNrOfUsers == MAXUSERS)
     {
@@ -123,7 +119,7 @@ void administration(User users[MAXUSERS], int *pNrOfUsers, const char *pFileName
             printUser(users, pNrOfUsers, pFileName);
             break;
         case 4:
-            /* code */
+            printUserAndRates(users, pNrOfUsers, pFileName);
             break;
         case 5:
             loginsAlternativs(users, pNrOfUsers, pFileName);
@@ -140,7 +136,8 @@ void loginsAlternativs(User users[MAXUSERS], int *pNrOfUsers, const char *pFileN
     while (1)
     {
         printf("Please enter user name, admin or quit: ");
-        scanf("%s%*c", choice);
+        fgets(choice, sizeof(choice), stdin);
+        choice[strcspn(choice, "\n")] = '\0';
         if (strcmp(choice, "admin") == 0)
         {
             administration(users, pNrOfUsers, pFileName);
@@ -161,6 +158,7 @@ void loginsAlternativs(User users[MAXUSERS], int *pNrOfUsers, const char *pFileN
                     userFound = true;
                     printf("%s's boardgames\n", users[i].userName);
                     boardGames(users, pNrOfUsers, pFileName);
+                    break;
                 }
             }
             if (!userFound)
@@ -306,16 +304,24 @@ void printUser(User users[MAXUSERS], int *pNrOfUsers, const char *pFileName)
 }
 void printUserAndRates(User users[MAXUSERS], int *pNrOfUsers, const char *pFileName)
 {
+    printf("Users and boardgames:\n");
+    printf("-----------------------------------------------------------\n");
     if (*pNrOfUsers == 0)
     {
         printf("No users registrerad\n");
         return;
     }
-    printf("Users and boardgames:\n");
-    printf("-----------------------------------------------------------\n");
     for (int i = 0; i < *pNrOfUsers; i++)
     {
         printf("%s\n", users[i].userName);
-        // en till for loop för printa rates
+        if (users[i].nrOfGames == 0)
+        {
+            printf("No games registrered\n");
+        }
+        for (int j = 0; j < users[i].nrOfGames; j++)
+        {
+            printf("    %-15s %d\n", users[i].list[j].gameName, users[i].list[j].rate);
+        }
     }
+    printf("\n");
 }
