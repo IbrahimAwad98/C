@@ -56,27 +56,44 @@ void readFromFile(User users[MAXUSERS], int *pNrOfUsers, const char *pFileName)
         printf("Error opening file: %s\n", pFileName);
         return;
     }
-    char Buffer[BUFFERSIZE];
+
+    char buffer[BUFFERSIZE];
     *pNrOfUsers = 0;
-    while (fgets(Buffer, sizeof(Buffer), pFile))
+
+    while (fgets(buffer, sizeof(buffer), pFile) && *pNrOfUsers < MAXUSERS)
     {
-        char *pToken = strtok(Buffer, "\n");
-        strcpy(users[*pNrOfUsers].userName, pToken);
+        buffer[strcspn(buffer, "\n")] = '\0'; // Ta bort newline
+        strcpy(users[*pNrOfUsers].userName, buffer);
         users[*pNrOfUsers].nrOfGames = 0;
-        pToken = strtok(NULL, "\n");
-        while (pToken)
+
+        while (fgets(buffer, sizeof(buffer), pFile) && users[*pNrOfUsers].nrOfGames < MAXGAMES)
         {
-            users[*pNrOfUsers].list[users[*pNrOfUsers].nrOfGames].rate = atoi(pToken);
-            users[*pNrOfUsers].nrOfGames++;
-            pToken = strtok(NULL, "\n");
+            buffer[strcspn(buffer, "\n")] = '\0';
+
+            // Kolla om raden innehåller "No games registered"
+            if (strstr(buffer, "No games registered") != NULL)
+            {
+                break; // Hoppa över användaren utan spel
+            }
+
+            // Läs in spelnamn och betyg
+            if (sscanf(buffer, " %15s %d", users[*pNrOfUsers].list[users[*pNrOfUsers].nrOfGames].gameName,
+                       &users[*pNrOfUsers].list[users[*pNrOfUsers].nrOfGames].rate) == 2)
+            {
+                users[*pNrOfUsers].nrOfGames++;
+            }
+            else
+            {
+                break; // Sluta läsa om vi når en tom rad
+            }
         }
+
+        (*pNrOfUsers)++;
     }
-    if (*pNrOfUsers == MAXUSERS)
-    {
-        printf("Maximum number of users (%d) reached.\n", MAXUSERS);
-    }
+
     fclose(pFile);
 }
+
 void writeToFile(User users[MAXUSERS], int *pNrOfUsers, const char *pFileName)
 {
     FILE *pFile = fopen(pFileName, "w");
